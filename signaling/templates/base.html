@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <title>{% block title %}{% endblock %} - Hello</title>
+    {% endblock %}
+</head>
+<body>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2021 by <a href="#">Iqbal Tawakal</a>.
+        <script type="text/javascript" src="{{ url_for('static', filename='vendors/vue/dist/vue.js') }}"></script>
+        {% endblock %}
+    </div>
+</body>
+</html>

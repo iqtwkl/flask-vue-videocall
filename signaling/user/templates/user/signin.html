@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}User{% endblock %}
+{% block head %}
+<h2>Signin</h2>
+<div>
+    <form method="POST" action="{{ url_for('user.signin') }}">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" name="password">
+        </div>
+        <input type="submit" value="signin">
+    </form>
+</div>
+{% endblock %}
+{% block footer %}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/user.js') }}"></script>
+{% endblock %}

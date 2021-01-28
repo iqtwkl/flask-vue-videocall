@@ -1,0 +1,25 @@
+{
+  "name": "hello-signalling-server",
+  "version": "1.0.0",
+  "description": "video call application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iqtwkl/hello-signalling-server.git"
+  },
+  "keywords": [
+    "video-call"
+  ],
+  "author": "Iqbal Tawakal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iqtwkl/hello-signalling-server/issues"
+  },
+  "homepage": "https://github.com/iqtwkl/hello-signalling-server#readme",
+  "dependencies": {
+    "bower": "^1.8.12"
+  }
+}

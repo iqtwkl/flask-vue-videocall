@@ -1,0 +1,24 @@
+{
+  "name": "hello-signalling-server",
+  "description": "video call application",
+  "main": "index.js",
+  "authors": [
+    "Iqbal Tawakal"
+  ],
+  "license": "ISC",
+  "keywords": [
+    "video-call"
+  ],
+  "homepage": "https://github.com/iqtwkl/hello-signalling-server",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "vue": "^2.6.12"
+  }
+}

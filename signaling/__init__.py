@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask_socketio import SocketIO
 
 socketio = SocketIO()
@@ -14,6 +14,10 @@ def create_app(debug=False):
     # register blueprint
     app.register_blueprint(room, url_prefix='/room')
     app.register_blueprint(user, url_prefix='/user')
+
+    @app.route('/', methods=['GET'])
+    def index():
+        return redirect(url_for('room.index'))
 
     socketio.init_app(app)
     return app

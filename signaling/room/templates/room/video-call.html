@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Room{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+    </style>
+{% endblock %}
+{% block content %}
+<h2>Video Call</h2>
+<div>
+    <span>Room ID: </span> <strong>{{ room_id }}</strong>
+</div>
+<video id="remoteStream" autoplay playsinline></video>
+{% endblock %}
+{% block footer %}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/room.js') }}"></script>
+{% endblock %}
