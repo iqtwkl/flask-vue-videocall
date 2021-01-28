@@ -6,13 +6,18 @@
     </style>
 {% endblock %}
 {% block content %}
-<h2>Video Call</h2>
-<div>
-    <span>Room ID: </span> <strong>{{ room_id }}</strong>
+<div id="vm">
+    <h2>Video Call</h2>
+    <div>
+        <span>Room ID: </span> <strong id="roomId">{{ room_id }}</strong>
+    </div>
+    <video class="remoteStream" autoplay playsinline></video>
+    <video class="localStream" autoplay playsinline></video>
 </div>
-<video id="remoteStream" autoplay playsinline></video>
 {% endblock %}
 {% block footer %}
 {{ super() }}
-<script type="text/javascript" src="{{ url_for('static', filename='js/room.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='vendors/vue-socket.io/dist/vue-socketio.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='vendors/store2/dist/store2.min.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/room.js') }}"></script>
 {% endblock %}
