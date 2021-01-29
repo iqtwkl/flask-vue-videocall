@@ -1,5 +1,6 @@
 const apiEndpoint = '/api_v1/';
-const signalServerUrl = 'ws://127.0.0.1:5000';
+const signalServerUrl = 'http://'+document.domain+':'+location.port+'/room';
+const roomId = $('#roomId').html();
 
 Vue.use(new VueSocketIO({
     debug: true,
@@ -9,7 +10,7 @@ Vue.use(new VueSocketIO({
       actionPrefix: "SOCKET_",
       mutationPrefix: "SOCKET_"
     },
-    options: {path: '/room', autoConnect: false }
+    options: {autoConnect: false, transports: ['websocket']}
   })
 );
 
@@ -31,11 +32,29 @@ const vm = new Vue({
             console.log('Data received: ',data);
             this.handleSignalingData(data)
         },
-        ready: function() {
+        status: function() {
             console.log("Ready");
+            this.createPeerConnection();
+            this.sendOffer();
+        },
+        connect: function() {
+            console.log("Connected");
         }
     },
     methods: {
+        getLocalStream: function() {
+            console.log('get local stream');
+            navigator.mediaDevices.getUserMedia({video: true, audio: true})
+            .then((stream) => {
+                this.localStream = stream;
+                this.$socket.connect();
+                this.localElem.srcObject = stream;
+                console.log('set local stream');
+            })
+            .catch(error => {
+                console.error('Cannot find stream - ', error)
+            });
+        },
         sendData: function(data) {
             console.log('send data');
             this.$socket.emit('data', data)
@@ -82,23 +101,6 @@ const vm = new Vue({
             ).catch(error => {
                 console.error('Cannot Send answer - ', error)
             })
-        },
-        getLocalStream: function() {
-            console.log('get local stream');
-            navigator.mediaDevices.getUserMedia({video: true, audio: true})
-            .then((stream) => {
-                this.localStream = stream;
-//                this.$socket.connect({
-//                        username: "username",
-//                        room: roomId
-//                    });
-                this.$socket.connect();
-                this.localElem.srcObject = stream;
-                console.log('set local stream');
-            })
-            .catch(error => {
-                console.error('Cannot find stream - ', error)
-            });
         },
         setAndSendLocalDescription: function(sessionDesc) {
             console.log('set local description')
