@@ -10,7 +10,7 @@ def connect():
     room = session.get('roomId')
     print("Connected ", username, room)
     join_room(room)
-    emit('status', {'msg': username + ' has entered the room.'}, room=room)
+    emit('ready', {'msg': username + ' has entered the room.'}, room=room)
 
 
 @socketio.on('disconnect', namespace="/")

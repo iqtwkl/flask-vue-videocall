@@ -11,8 +11,9 @@
     <div>
         <span>Room ID: </span> <strong>{{ room_id }}</strong>
     </div>
-    <video class="remoteStream" autoplay playsinline></video>
-    <video class="localStream" autoplay playsinline></video>
+    <input v-if="!username" name="username" type="text">
+    <video v-if="remoteStream" class="remoteStream" :src-object.prop.camel="remoteStream" autoplay playsinline></video>
+    <video v-if="localStream" class="localStream" :src-object.prop.camel="localStream" autoplay playsinline></video>
 </div>
 {% endblock %}
 {% block footer %}

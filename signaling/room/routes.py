@@ -8,6 +8,9 @@ def index():
     room_id = request.args.get('room_id')
     if room_id is not None:
         session['roomId'] = room_id
+        if request.method == 'POST':
+            username = request.args.get('username')
+            session['username'] = username
         return render_template('room/video-call.html', room_id=room_id)
     return render_template('room/index.html')
 

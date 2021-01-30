@@ -1,6 +1,6 @@
-const apiEndpoint = '/api_v1/';
-const signalServerUrl = 'http://'+document.domain+':'+location.port+'/room';
-const roomId = $('#roomId').html();
+var apiEndpoint = '/api_v1/';
+var signalServerUrl = 'http://'+document.domain+':'+location.port+'/';
+var roomId = $('#roomId').html();
 
 Vue.use(new VueSocketIO({
     debug: true,
@@ -14,25 +14,34 @@ Vue.use(new VueSocketIO({
   })
 );
 
-const vm = new Vue({
+var vm = new Vue({
     el: '#vm',
     delimiters: ['[[', ']]'],
     data: {
-        localStream: '',
-        peerConnection: '',
-        remoteElem: $('.remoteStream'),
-        localElem: $('.localStream'),
+        stream: null,
+        localStream: null,
+        remoteStream: null,
+        peerConnection: null,
         pcConfig: {},
+        username: null,
     },
-    created: function() {
-        this.getLocalStream();
+    created: async function() {
+        console.log('username:', this.username);
+        console.log('localStream:', this.localStream);
+        console.log('remoteStream:', this.remoteStream);
+        this.getUsername();
+        if(this.username)
+            this.getLocalStream();
+        console.log('username:', this.username);
+        console.log('localStream:', this.localStream);
+        console.log('remoteStream:', this.remoteStream);
     },
     sockets:{
         data: function(data) {
             console.log('Data received: ',data);
-            this.handleSignalingData(data)
+            this.handleSignalingData(data);
         },
-        status: function() {
+        ready: function(data) {
             console.log("Ready");
             this.createPeerConnection();
             this.sendOffer();
@@ -46,18 +55,18 @@ const vm = new Vue({
             console.log('get local stream');
             navigator.mediaDevices.getUserMedia({video: true, audio: true})
             .then((stream) => {
+                this.stream = stream;
                 this.localStream = stream;
                 this.$socket.connect();
-                this.localElem.srcObject = stream;
                 console.log('set local stream');
             })
             .catch(error => {
-                console.error('Cannot find stream - ', error)
+                console.error('Cannot find stream - ', error);
             });
         },
         sendData: function(data) {
             console.log('send data');
-            this.$socket.emit('data', data)
+            this.$socket.emit('data', data);
         },
         handleSignalingData: function(data) {
             console.log('handling signal type - ', data.type);
@@ -80,10 +89,10 @@ const vm = new Vue({
                 this.peerConnection = new RTCPeerConnection(this.pcConfig);
                 this.peerConnection.onicecandidate = this.onIceCandidate;
                 this.peerConnection.onaddstream = this.onAddStream;
-                this.peerConnection.addStream(this.localStream);
+                this.peerConnection.addStream(this.stream);
                 console.log('Peer Connection connected');
             } catch(error) {
-                console.error('Failed to connect to Peer - ', error)
+                console.error('Failed to connect to Peer - ', error);
             }
         },
         sendOffer: function() {
@@ -91,34 +100,40 @@ const vm = new Vue({
             this.peerConnection.createOffer().then(
                 this.setAndSendLocalDescription
             ).catch(error => {
-                console.error('Cannot Send offer - ', error)
-            })
+                console.error('Cannot Send offer - ', error);
+            });
         },
         sendAnswer: function() {
             console.log('send answer');
             this.peerConnection.createAnswer().then(
                 this.setAndSendLocalDescription
             ).catch(error => {
-                console.error('Cannot Send answer - ', error)
-            })
+                console.error('Cannot Send answer - ', error);
+            });
         },
         setAndSendLocalDescription: function(sessionDesc) {
-            console.log('set local description')
+            console.log('set local description');
             this.peerConnection.setLocalDescription(sessionDesc);
             this.sendData(sessionDesc);
         },
         onIceCandidate: function(event) {
             if(event.candidate) {
                 console.log('ice candidate');
-                sendData({
+                this.sendData({
                     type: 'candidate',
                     candidate: event.candidate
                 });
             }
         },
         onAddStream: function(event) {
-            console.log('adding stream');
-            this.remoteElem.srcObject = event.stream
+            console.log('adding stream:', event.stream);
+            this.remoteStream = event.stream;
         },
+        getUsername: async function(){
+            var response = await fetch(apiEndpoint + 'user/get-username');
+            var data = await response.json();
+            console.log(data);
+            this.username = data.username;
+        }
     }
 });
