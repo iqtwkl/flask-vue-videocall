@@ -1,6 +1,13 @@
 var apiEndpoint = '/api_v1/';
 var signalServerUrl = 'http://'+document.domain+':'+location.port+'/';
 var roomId = $('#roomId').html();
+var negotiating = false;
+navigator.getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia;
+window.RTCPeerConnection = window.RTCPeerConnection ||
+                           window.webkitRTCPeerConnection;
+
 
 Vue.use(new VueSocketIO({
     debug: true,
@@ -21,44 +28,48 @@ var vm = new Vue({
         stream: null,
         localStream: null,
         remoteStream: null,
+        remoteConnection: null,
         peerConnection: null,
+        peerRemoteConnection: null,
         pcConfig: {},
         username: null,
     },
     created: async function() {
-        console.log('username:', this.username);
-        console.log('localStream:', this.localStream);
-        console.log('remoteStream:', this.remoteStream);
-        this.getUsername();
-        if(this.username)
-            this.getLocalStream();
-        console.log('username:', this.username);
-        console.log('localStream:', this.localStream);
-        console.log('remoteStream:', this.remoteStream);
+        this.getUsername()
+            .then(() => {
+                if(this.username) {
+                    console.log('execute', this.username)
+                    this.getLocalStream();
+                }
+            }
+        );
     },
     sockets:{
         data: function(data) {
             console.log('Data received: ',data);
             this.handleSignalingData(data);
         },
-        ready: function(data) {
+        ready: async function(data) {
             console.log("Ready");
-            this.createPeerConnection();
+            await this.createPeerConnection();
             this.sendOffer();
         },
         connect: function() {
             console.log("Connected");
-        }
+        },
+        disconnect: function() {
+            this.remoteStream = null;
+        },
     },
     methods: {
-        getLocalStream: function() {
+        getLocalStream: async function() {
             console.log('get local stream');
             navigator.mediaDevices.getUserMedia({video: true, audio: true})
             .then((stream) => {
                 this.stream = stream;
                 this.localStream = stream;
+                console.log("localStream:", stream);
                 this.$socket.connect();
-                console.log('set local stream');
             })
             .catch(error => {
                 console.error('Cannot find stream - ', error);
@@ -72,12 +83,16 @@ var vm = new Vue({
             console.log('handling signal type - ', data.type);
             switch (data.type) {
                 case 'offer':
-                  this.createPeerConnection();
-                  this.peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-                  this.sendAnswer();
-                  break;
+                    this.createPeerConnection();
+                    this.peerConnection.setRemoteDescription(new RTCSessionDescription(data)).then(
+                        this.sendAnswer
+                    ).catch(error => {
+                        console.log('error send answer: ', error)
+                    });
+                    break;
                 case 'answer':
-                  this.peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+                    console.log("answer: ",data);
+                    this.peerConnection.setRemoteDescription(new RTCSessionDescription(data));
                   break;
                 case 'candidate':
                   this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -86,9 +101,13 @@ var vm = new Vue({
         },
         createPeerConnection: function() {
             try {
+                this.remoteConnection = new RTCPeerConnection(this.pcConfig);
+                this.remoteConnection.onaddstream = this.onAddRemoteStream;
+
                 this.peerConnection = new RTCPeerConnection(this.pcConfig);
                 this.peerConnection.onicecandidate = this.onIceCandidate;
-                this.peerConnection.onaddstream = this.onAddStream;
+                this.peerConnection.onaddstream = this.onAddLocalStream;
+                this.peerConnection.onnegotiationneeded = this.onNegotiationNeeded;
                 this.peerConnection.addStream(this.stream);
                 console.log('Peer Connection connected');
             } catch(error) {
@@ -113,8 +132,9 @@ var vm = new Vue({
         },
         setAndSendLocalDescription: function(sessionDesc) {
             console.log('set local description');
-            this.peerConnection.setLocalDescription(sessionDesc);
-            this.sendData(sessionDesc);
+            this.peerConnection.setLocalDescription(sessionDesc).then(
+                this.sendData(sessionDesc)
+            );
         },
         onIceCandidate: function(event) {
             if(event.candidate) {
@@ -125,15 +145,27 @@ var vm = new Vue({
                 });
             }
         },
-        onAddStream: function(event) {
+        onAddRemoteStream: function(event) {
             console.log('adding stream:', event.stream);
             this.remoteStream = event.stream;
+        },
+        onAddLocalStream: function(event) {
+            console.log('adding stream:', event.stream);
+            this.localStream = event.stream;
         },
         getUsername: async function(){
             var response = await fetch(apiEndpoint + 'user/get-username');
             var data = await response.json();
-            console.log(data);
             this.username = data.username;
+        },
+        onNegotiationNeeded: async function() {
+            try {
+                if (negotiating || this.peerConnection.signalingState != "stable") return;
+                negotiating = true;
+                /* Your async/await-using code goes here */
+            } finally {
+                negotiating = false;
+            }
         }
     }
 });

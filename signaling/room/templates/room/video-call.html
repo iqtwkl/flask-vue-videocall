@@ -11,9 +11,12 @@
     <div>
         <span>Room ID: </span> <strong>{{ room_id }}</strong>
     </div>
-    <input v-if="!username" name="username" type="text">
-    <video v-if="remoteStream" class="remoteStream" :src-object.prop.camel="remoteStream" autoplay playsinline></video>
-    <video v-if="localStream" class="localStream" :src-object.prop.camel="localStream" autoplay playsinline></video>
+    <form v-if="!username" method="post" action="{{ url_for('room.index', room_id=room_id) }}">
+        <input name="username" type="text">
+        <input type="submit" value="Submit">
+    </form>
+    <video v-if="remoteStream" class="remoteStream" :src-object.prop.camel="remoteStream" autoplay></video>
+    <video v-if="localStream" class="localStream" :src-object.prop.camel="localStream" autoplay muted></video>
 </div>
 {% endblock %}
 {% block footer %}
