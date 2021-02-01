@@ -28,7 +28,6 @@ var vm = new Vue({
         stream: null,
         localStream: null,
         remoteStream: null,
-        remoteConnection: null,
         peerConnection: null,
         peerRemoteConnection: null,
         pcConfig: {},
@@ -67,8 +66,8 @@ var vm = new Vue({
             navigator.mediaDevices.getUserMedia({video: true, audio: true})
             .then((stream) => {
                 this.stream = stream;
-                this.localStream = stream;
                 console.log("localStream:", stream);
+                console.log("this.localStream:", this.stream);
                 this.$socket.connect();
             })
             .catch(error => {
@@ -101,14 +100,13 @@ var vm = new Vue({
         },
         createPeerConnection: function() {
             try {
-                this.remoteConnection = new RTCPeerConnection(this.pcConfig);
-                this.remoteConnection.onaddstream = this.onAddRemoteStream;
-
                 this.peerConnection = new RTCPeerConnection(this.pcConfig);
                 this.peerConnection.onicecandidate = this.onIceCandidate;
-                this.peerConnection.onaddstream = this.onAddLocalStream;
+                this.peerConnection.onaddstream = this.onAddRemoteStream;
                 this.peerConnection.onnegotiationneeded = this.onNegotiationNeeded;
+                console.log('stream di create peer', this.stream)
                 this.peerConnection.addStream(this.stream);
+                this.localStream = this.stream
                 console.log('Peer Connection connected');
             } catch(error) {
                 console.error('Failed to connect to Peer - ', error);
@@ -148,10 +146,6 @@ var vm = new Vue({
         onAddRemoteStream: function(event) {
             console.log('adding stream:', event.stream);
             this.remoteStream = event.stream;
-        },
-        onAddLocalStream: function(event) {
-            console.log('adding stream:', event.stream);
-            this.localStream = event.stream;
         },
         getUsername: async function(){
             var response = await fetch(apiEndpoint + 'user/get-username');
