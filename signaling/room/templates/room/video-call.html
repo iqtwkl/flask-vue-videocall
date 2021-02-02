@@ -17,6 +17,14 @@
     </form>
     <video v-if="remoteStream" class="remoteStream" :src-object.prop.camel="remoteStream" autoplay></video>
     <video v-if="localStream" class="localStream" :src-object.prop.camel="localStream" autoplay muted></video>
+    <button class="" v-on:click="toggleVoice">
+        <span v-if="isVoiceOn">turn off voice</span>
+        <span v-else>turn on voice</span>
+    </button>
+    <button class="" v-on:click="toggleCamera">
+        <span v-if="isCameraOn">turn off camera</span>
+        <span v-else>turn on camera</span>
+    </button>
 </div>
 {% endblock %}
 {% block footer %}

@@ -32,6 +32,8 @@ var vm = new Vue({
         peerRemoteConnection: null,
         pcConfig: {},
         username: null,
+        isCameraOn: true,
+        isVoiceOn: true,
     },
     created: async function() {
         this.getUsername()
@@ -76,7 +78,7 @@ var vm = new Vue({
     methods: {
         getLocalStream: async function() {
             console.log('get local stream');
-            navigator.mediaDevices.getUserMedia({video: true, audio: true})
+            navigator.mediaDevices.getUserMedia({video: this.isCameraOn, audio: this.isVoiceOn})
             .then((stream) => {
                 this.stream = stream;
                 this.localStream = stream;
@@ -138,11 +140,6 @@ var vm = new Vue({
             console.log('adding stream:', event.stream);
             this.remoteStream = event.stream;
         },
-        getUsername: async function(){
-            var response = await fetch(apiEndpoint + 'user/get-username');
-            var data = await response.json();
-            this.username = data.username;
-        },
         onNegotiationNeeded: async function() {
             try {
                 if (negotiating || this.peerConnection.signalingState != "stable") return;
@@ -151,6 +148,19 @@ var vm = new Vue({
             } finally {
                 negotiating = false;
             }
-        }
+        },
+        getUsername: async function(){
+            var response = await fetch(apiEndpoint + 'user/get-username');
+            var data = await response.json();
+            this.username = data.username;
+        },
+        toggleCamera: function() {
+            this.isCameraOn = !this.isCameraOn;
+            this.localStream.getVideoTracks()[0].enabled = this.isCameraOn;
+        },
+        toggleVoice: function()  {
+            this.isVoiceOn = !this.isVoiceOn;
+            this.localStream.getAudioTracks()[0].enabled = this.isVoiceOn;
+        },
     }
 });
