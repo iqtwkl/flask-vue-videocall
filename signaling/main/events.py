@@ -31,4 +31,4 @@ def disconnect():
 def data(data):
     print('Message from {}: {}', data)
     room = session.get('roomId')
-    emit('data', data, room=room)
+    emit('data', data, to=room, broadcast=True, include_self=False)

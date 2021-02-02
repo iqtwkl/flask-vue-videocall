@@ -66,8 +66,7 @@ var vm = new Vue({
             navigator.mediaDevices.getUserMedia({video: true, audio: true})
             .then((stream) => {
                 this.stream = stream;
-                console.log("localStream:", stream);
-                console.log("this.localStream:", this.stream);
+                this.localStream = stream;
                 this.$socket.connect();
             })
             .catch(error => {
@@ -106,7 +105,6 @@ var vm = new Vue({
                 this.peerConnection.onnegotiationneeded = this.onNegotiationNeeded;
                 console.log('stream di create peer', this.stream)
                 this.peerConnection.addStream(this.stream);
-                this.localStream = this.stream
                 console.log('Peer Connection connected');
             } catch(error) {
                 console.error('Failed to connect to Peer - ', error);
