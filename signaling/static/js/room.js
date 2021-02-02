@@ -44,10 +44,6 @@ var vm = new Vue({
         );
     },
     sockets:{
-        data: function(data) {
-            console.log('Data received: ',data);
-            this.handleSignalingData(data);
-        },
         ready: async function(data) {
             console.log("Ready");
             await this.createPeerConnection();
@@ -59,6 +55,23 @@ var vm = new Vue({
         disconnect: function() {
             this.remoteStream = null;
         },
+        offer: function(data) {
+            console.log('offer: ',data);
+            this.createPeerConnection();
+            this.peerConnection.setRemoteDescription(new RTCSessionDescription(data)).then(
+                this.sendAnswer
+            ).catch(error => {
+                console.log('error send answer: ', error)
+            });
+        },
+        answer: function(data) {
+            console.log("answer: ",data);
+            this.peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+        },
+        candidate: function(data) {
+            console.log("candidate: ",data);
+            this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
     },
     methods: {
         getLocalStream: async function() {
@@ -72,30 +85,6 @@ var vm = new Vue({
             .catch(error => {
                 console.error('Cannot find stream - ', error);
             });
-        },
-        sendData: function(data) {
-            console.log('send data');
-            this.$socket.emit('data', data);
-        },
-        handleSignalingData: function(data) {
-            console.log('handling signal type - ', data.type);
-            switch (data.type) {
-                case 'offer':
-                    this.createPeerConnection();
-                    this.peerConnection.setRemoteDescription(new RTCSessionDescription(data)).then(
-                        this.sendAnswer
-                    ).catch(error => {
-                        console.log('error send answer: ', error)
-                    });
-                    break;
-                case 'answer':
-                    console.log("answer: ",data);
-                    this.peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-                  break;
-                case 'candidate':
-                  this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                  break;
-           }
         },
         createPeerConnection: function() {
             try {
@@ -113,7 +102,7 @@ var vm = new Vue({
         sendOffer: function() {
             console.log('send offer');
             this.peerConnection.createOffer().then(
-                this.setAndSendLocalDescription
+                this.setOfferLocalDescription
             ).catch(error => {
                 console.error('Cannot Send offer - ', error);
             });
@@ -121,21 +110,25 @@ var vm = new Vue({
         sendAnswer: function() {
             console.log('send answer');
             this.peerConnection.createAnswer().then(
-                this.setAndSendLocalDescription
+                this.setAnswerLocalDescription
             ).catch(error => {
                 console.error('Cannot Send answer - ', error);
             });
         },
-        setAndSendLocalDescription: function(sessionDesc) {
-            console.log('set local description');
+        setOfferLocalDescription: function(sessionDesc)  {
             this.peerConnection.setLocalDescription(sessionDesc).then(
-                this.sendData(sessionDesc)
+                this.$socket.emit('offer', sessionDesc)
+            );
+        },
+        setAnswerLocalDescription: function(sessionDesc)  {
+            this.peerConnection.setLocalDescription(sessionDesc).then(
+                this.$socket.emit('answer', sessionDesc)
             );
         },
         onIceCandidate: function(event) {
             if(event.candidate) {
                 console.log('ice candidate');
-                this.sendData({
+                this.$socket.emit('candidate', {
                     type: 'candidate',
                     candidate: event.candidate
                 });

@@ -29,6 +29,27 @@ def disconnect():
 
 @socketio.on('data', namespace="/")
 def data(data):
-    print('Message from {}: {}', data)
+    print('Data:', data)
     room = session.get('roomId')
     emit('data', data, to=room, broadcast=True, include_self=False)
+
+
+@socketio.on('offer', namespace="/")
+def offer(data):
+    print('offer:', data)
+    room = session.get('roomId')
+    emit('offer', data, to=room, broadcast=True, include_self=False)
+
+
+@socketio.on('answer', namespace="/")
+def answer(data):
+    print('answer:', data)
+    room = session.get('roomId')
+    emit('answer', data, to=room, broadcast=True, include_self=False)
+
+
+@socketio.on('candidate', namespace="/")
+def candidate(data):
+    print('candidate:', data)
+    room = session.get('roomId')
+    emit('candidate', data, to=room, broadcast=True, include_self=False)
